@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ResuAI - Recruitment & Career Matchmaker{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <!-- Background glows -->
+    <div class="bg-bubble bg-bubble-1"></div>
+    <div class="bg-bubble bg-bubble-2"></div>
+    <div class="bg-bubble bg-bubble-3"></div>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'home' %}" class="logo">
+                <i class="fa-solid fa-brain-circuit logo-icon"></i>
+                <span class="logo-text">Resu<span class="accent-text">AI</span></span>
+            </a>
+            
+            <nav class="nav-links">
+                <a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a>
+                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+                
+                {% if user.is_authenticated %}
+                    {% if user.profile.user_type == 'company' %}
+                        <!-- Recruiter Menu -->
+                        <a href="{% url 'company_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'company_dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-chart-line"></i> Dashboard
+                        </a>
+                        <a href="{% url 'create_job' %}" class="btn-primary">
+                            <i class="fa-solid fa-plus-circle"></i> Post Job
+                        </a>
+                        <div class="user-menu">
+                            <span class="username-badge blue-glow">
+                                <i class="fa-solid fa-building"></i> {{ user.profile.company_name|default:user.username }}
+                            </span>
+                    {% else %}
+                        <!-- Candidate Menu -->
+                        <a href="{% url 'student_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-chart-pie"></i> My Profile
+                        </a>
+                        <a href="{% url 'job_listings' %}" class="nav-link {% if request.resolver_match.url_name == 'job_listings' %}active{% endif %}">
+                            <i class="fa-solid fa-search"></i> Find Jobs
+                        </a>
+                        <div class="user-menu">
+                            <span class="username-badge green-glow">
+                                <i class="fa-solid fa-user-graduate"></i> {{ user.username }}
+                            </span>
+                    {% endif %}
+                        <a href="{% url 'logout' %}" class="btn-logout" title="Log Out">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- Guest Menu -->
+                    <a href="{% url 'login' %}" class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}">Login</a>
+                    <a href="{% url 'student_register' %}" class="btn-secondary">Candidate Signup</a>
+                    <a href="{% url 'company_register' %}" class="btn-primary">Employer Portal</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Messages / Toast Notifications -->
+    {% if messages %}
+        <div class="message-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <div class="alert-content">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check alert-icon"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fa-solid fa-circle-exclamation alert-icon"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info alert-icon"></i>
+                        {% endif %}
+                        <span class="alert-message">{{ message }}</span>
+                    </div>
+                    <button class="alert-close" onclick="this.parentElement.remove()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content wrapper -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2026 ResuAI Recruitment & Career Recommendation Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

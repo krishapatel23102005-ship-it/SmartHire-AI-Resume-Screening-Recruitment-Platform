@@ -1,0 +1,94 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}ResuAI - AI Recruitment & Career Matchmaker{% endblock %}
+
+{% block content %}
+<div class="home-wrapper">
+    <!-- Hero Header -->
+    <section class="hero-section text-center">
+        <h1 class="hero-title">AI-Powered <span class="accent-text">Recruitment</span> & Matchmaking</h1>
+        <p class="hero-subtitle">Optimize your resume against applicant tracking systems, discover career gaps, and connect with corporate target companies.</p>
+        
+        <div class="hero-actions mt-4">
+            <a href="{% url 'student_register' %}" class="btn-primary btn-large">
+                <i class="fa-solid fa-user-graduate"></i> I am a Candidate
+            </a>
+            <a href="{% url 'company_register' %}" class="btn-secondary btn-large">
+                <i class="fa-solid fa-briefcase"></i> I am an Employer
+            </a>
+        </div>
+    </section>
+
+    <!-- Stat Grid -->
+    <section class="stats-grid mt-4">
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper blue-glow">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Matching Accuracy</span>
+                <span class="stat-value">98.4%</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper green-glow">
+                <i class="fa-solid fa-file-contract"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Resumes Analyzed</span>
+                <span class="stat-value">12,450+</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper purple-glow">
+                <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Active Job Openings</span>
+                <span class="stat-value">840+</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper red-glow">
+                <i class="fa-solid fa-handshake"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Successful Matches</span>
+                <span class="stat-value">3,120+</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Twin Feature Cards -->
+    <section class="portal-splits mt-4">
+        <div class="portal-card glass-panel">
+            <h3>For Candidates</h3>
+            <p class="mt-2 text-secondary">Discover how recruiting robots parse your resume. Match your capabilities against active listings and instantly identify missing technical skills.</p>
+            <ul class="feature-bullet-list mt-3">
+                <li><i class="fa-solid fa-check text-success"></i> PDF Resume Text Extraction</li>
+                <li><i class="fa-solid fa-check text-success"></i> Core Skill Taxonomy Detection</li>
+                <li><i class="fa-solid fa-check text-success"></i> ATS Score Assessment</li>
+                <li><i class="fa-solid fa-check text-success"></i> Skill Gap Analysis against Jobs</li>
+                <li><i class="fa-solid fa-check text-success"></i> Direct Job Application Submissions</li>
+            </ul>
+            <a href="{% url 'student_register' %}" class="btn-primary btn-block mt-4">Create Candidate Account</a>
+        </div>
+
+        <div class="portal-card glass-panel">
+            <h3>For Employers</h3>
+            <p class="mt-2 text-secondary">Publish your open vacancies, set minimum skill benchmarks, and let our system automatically rank candidates by actual match suitability.</p>
+            <ul class="feature-bullet-list mt-3">
+                <li><i class="fa-solid fa-check text-success"></i> Recruiter Profile Setup</li>
+                <li><i class="fa-solid fa-check text-success"></i> Simple Job Posting Creation</li>
+                <li><i class="fa-solid fa-check text-success"></i> Comma-separated Skill Tagging</li>
+                <li><i class="fa-solid fa-check text-success"></i> Candidate Matching & Leaderboards</li>
+                <li><i class="fa-solid fa-check text-success"></i> Status Ranks: Recommended vs Rejected</li>
+            </ul>
+            <a href="{% url 'company_register' %}" class="btn-secondary btn-block mt-4">Create Corporate Account</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

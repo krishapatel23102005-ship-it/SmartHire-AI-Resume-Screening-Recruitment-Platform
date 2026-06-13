@@ -1,0 +1,124 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Candidate Rankings - {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="report-wrapper">
+    <!-- Top Header -->
+    <div class="report-header glass-panel">
+        <div class="header-main">
+            <a href="{% url 'company_dashboard' %}" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+            <h2 class="mt-2">Candidate Rankings: {{ job.title }}</h2>
+            <p class="scanned-date"><i class="fa-solid fa-briefcase"></i> Recruiter Ranking Leaderboard</p>
+        </div>
+    </div>
+
+    <!-- Analytics Breakdown Grid -->
+    <section class="stats-grid">
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper blue-glow">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Total Applicants</span>
+                <span class="stat-value">{{ stats.total }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper green-glow">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Highly Recommended</span>
+                <span class="stat-value">{{ stats.highly }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper purple-glow">
+                <i class="fa-solid fa-users-viewfinder"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Shortlisted</span>
+                <span class="stat-value">{{ stats.shortlisted }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper red-glow">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Rejected</span>
+                <span class="stat-value">{{ stats.rejected }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Table -->
+    <div class="history-card glass-panel">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-ranking-star text-primary"></i> Application Leaderboard</h3>
+            <p>Candidates are automatically sorted and graded by compatibility scoring</p>
+        </div>
+        
+        {% if applications %}
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Rank</th>
+                            <th>Candidate Name</th>
+                            <th>Email Address</th>
+                            <th>Match Score</th>
+                            <th>Status Class</th>
+                            <th>Submission Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if forloop.counter == 1 %}badge-success{% elif forloop.counter == 2 %}badge-warning{% elif forloop.counter == 3 %}badge-secondary{% else %}badge-dark{% endif %}" style="font-size: 13px; font-weight: 700; min-width: 28px; text-align: center; display: inline-block;">
+                                        #{{ forloop.counter }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ app.student.username }}</strong></td>
+                                <td>{{ app.student.email }}</td>
+                                <td>
+                                    <span class="badge {% if app.match_score >= 90 %}badge-success{% elif app.match_score >= 70 %}badge-warning{% else %}badge-danger{% endif %}" style="font-size: 13px;">
+                                        {{ app.match_score }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="score-label-badge {% if app.status == 'Highly Recommended' %}success{% elif app.status == 'Shortlisted' %}warning{% else %}danger{% endif %}" style="padding: 4px 12px; font-size: 11px;">
+                                        {{ app.status }}
+                                    </span>
+                                </td>
+                                <td>{{ app.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'candidate_detail' app.pk %}" class="btn-primary" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                        <i class="fa-solid fa-address-card"></i> Review Profile
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-users-slash empty-icon"></i>
+                <h4>No Applicants Yet</h4>
+                <p>No candidates have applied for this position. Applicants will appear once they apply.</p>
+                <div class="mt-3">
+                    <span class="text-muted font-sm">Public Application Link:</span>
+                    <pre class="raw-text-console" style="max-width: 400px; margin: 10px auto; padding: 10px; font-size: 11px;"><code>http://127.0.0.1:8000{% url 'job_detail' job.pk %}</code></pre>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

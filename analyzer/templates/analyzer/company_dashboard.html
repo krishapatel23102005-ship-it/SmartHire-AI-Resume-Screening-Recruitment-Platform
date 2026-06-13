@@ -1,0 +1,115 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Employer Dashboard - ResuAI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Header Summary -->
+    <div class="report-header glass-panel">
+        <div class="header-main">
+            <h2>Welcome, {{ company_name }}</h2>
+            <p class="scanned-date"><i class="fa-solid fa-industry"></i> Corporate Recruiter Panel</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'create_job' %}" class="btn-primary">
+                <i class="fa-solid fa-plus-circle"></i> Publish New Job
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <section class="stats-grid mt-4">
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper blue-glow">
+                <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Active Openings</span>
+                <span class="stat-value">{{ jobs_data|length }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper green-glow">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Total Applicants</span>
+                <span class="stat-value">{{ total_apps|default:0 }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Job Postings List -->
+    <div class="history-card glass-panel mt-4">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-list-check"></i> Published Vacancies</h3>
+            <p>Manage your postings and review candidate leaderboard rankings</p>
+        </div>
+        
+        {% if jobs_data %}
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Experience</th>
+                            <th>Required Skills</th>
+                            <th>Min Match</th>
+                            <th>Applicants</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in jobs_data %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.job.title }}</strong>
+                                    <small class="text-muted block mt-1">Posted on {{ item.job.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td><span class="badge badge-secondary">{{ item.job.experience_required }}</span></td>
+                                <td>
+                                    <div class="skills-flex" style="gap: 4px; max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-flex;">
+                                        {% for skill in item.job.required_skills %}
+                                            <span class="badge badge-success" style="font-size: 10px; padding: 2px 6px;">{{ skill }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td><strong>{{ item.job.min_score }}%</strong></td>
+                                <td>
+                                    <span class="badge {% if item.app_count > 0 %}badge-success{% else %}badge-warning{% endif %}">
+                                        {{ item.app_count }} Applied
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{% url 'candidate_ranking' item.job.pk %}" class="btn-primary" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;" title="Rank Candidates">
+                                            <i class="fa-solid fa-ranking-star"></i> Leaderboard
+                                        </a>
+                                        <a href="{% url 'edit_job' item.job.pk %}" class="btn-action btn-view" title="Edit Job Posting">
+                                            <i class="fa-solid fa-pencil"></i>
+                                        </a>
+                                        <form action="{% url 'delete_job' item.job.pk %}" method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this job posting? This will delete all applications.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-action btn-delete" title="Delete Job">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-folder-open empty-icon"></i>
+                <h4>No Jobs Posted Yet</h4>
+                <p>Publish your first job vacancy to start receiving ranked applicants.</p>
+                <a href="{% url 'create_job' %}" class="btn-primary mt-3">Post a Job</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

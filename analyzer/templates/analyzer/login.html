@@ -1,0 +1,42 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Login - ResuAI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card glass-panel">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Log in to upload and analyze your resume.</p>
+        </div>
+        
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_username">
+                    <i class="fa-solid fa-user"></i> Username
+                </label>
+                <input type="text" name="username" autofocus required id="id_username" placeholder="Enter your username" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">
+                    <i class="fa-solid fa-lock"></i> Password
+                </label>
+                <input type="password" name="password" required id="id_password" placeholder="Enter your password" class="form-control">
+            </div>
+            
+            <button type="submit" class="btn-primary btn-block">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+             <p>register as:</p>
+             <a href="{% url 'student_register' %}">student</a>
+             <a href="{% url 'company_register' %}">Company</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

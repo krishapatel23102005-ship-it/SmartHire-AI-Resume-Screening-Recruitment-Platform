@@ -1,0 +1,369 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Candidate Dashboard - ResuAI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Stat Grid -->
+    <section class="stats-grid">
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper blue-glow">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Resumes Uploaded</span>
+                <span class="stat-value">{{ stats.total }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper green-glow">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Average ATS Score</span>
+                <span class="stat-value">{{ stats.avg }}%</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper purple-glow">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Highest ATS Score</span>
+                <span class="stat-value">{{ stats.max }}%</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon-wrapper red-glow">
+                <i class="fa-solid fa-building-user"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Applications Submitted</span>
+                <span class="stat-value">{{ applied_list.count }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-layout">
+        <!-- Left Column: Upload, Matchmaker, and Application History -->
+        <div class="dashboard-main-column">
+            <!-- Upload Dropzone (if no resume scanned or to upload a new one) -->
+            <div class="upload-card glass-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload Resume</h3>
+                    <p>Supported format: PDF (Max size: 5MB)</p>
+                </div>
+                
+                <form action="{% url 'analyze_resume' %}" method="POST" enctype="multipart/form-data" id="upload-form">
+                    {% csrf_token %}
+                    <div class="drop-zone" id="drop-zone">
+                        <i class="fa-solid fa-file-pdf drop-icon"></i>
+                        <span class="drop-text">Drag and drop your PDF resume here or <span class="browse-link">browse</span></span>
+                        <input type="file" name="resume" id="resume-input" accept=".pdf" class="file-input" required>
+                    </div>
+                    
+                    <div id="file-details" class="file-details hidden">
+                        <div class="file-info">
+                            <i class="fa-regular fa-file-pdf text-danger"></i>
+                            <span id="file-name">filename.pdf</span>
+                            <span id="file-size">(0 KB)</span>
+                        </div>
+                        <button type="button" id="remove-file-btn" class="btn-icon"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary btn-block mt-3 hidden" id="submit-upload-btn">
+                        <i class="fa-solid fa-bolt"></i> Analyze Resume
+                    </button>
+                </form>
+            </div>
+
+            <!-- AI Career Recommendations -->
+            {% if latest_analysis %}
+                <div class="recommendations-card glass-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-laptop-code text-primary"></i> AI Job Recommendations</h3>
+                        <p>Based on detected skills from your latest resume scan</p>
+                    </div>
+                    
+                    {% if recommended_jobs %}
+                        <div class="recommended-jobs-list">
+                            {% for rec in recommended_jobs %}
+                                <div class="job-rec-item glass-panel">
+                                    <div class="job-rec-header">
+                                        <div>
+                                            <h4>{{ rec.job.title }}</h4>
+                                            <span class="company-subname"><i class="fa-solid fa-building"></i> {{ rec.company_name }}</span>
+                                        </div>
+                                        <span class="badge {% if rec.match_score >= 90 %}badge-success{% elif rec.match_score >= 70 %}badge-warning{% else %}badge-danger{% endif %}">
+                                            {{ rec.match_score }}% Match
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="job-rec-details mt-2">
+                                        <span class="detail-tag"><i class="fa-solid fa-briefcase"></i> Exp: {{ rec.job.experience_required }}</span>
+                                        {% if rec.missing %}
+                                            <div class="missing-rec-skills">
+                                                <span class="text-muted font-sm">Missing:</span>
+                                                {% for skill in rec.missing %}
+                                                    <span class="badge badge-danger text-xs">{{ skill }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="badge badge-success"><i class="fa-solid fa-check-double"></i> All skills matched!</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="job-rec-actions mt-3">
+                                        <a href="{% url 'job_detail' rec.job.pk %}" class="btn-secondary btn-block">
+                                            <i class="fa-solid fa-paper-plane"></i> View Match details & Apply
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <p>No jobs have been posted by recruiters yet. Recommendations will appear when openings are published!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Application Tracker -->
+            <div class="history-card glass-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-paper-plane"></i> Submitted Applications</h3>
+                </div>
+                
+                {% if applied_list %}
+                    <div class="table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Job Title</th>
+                                    <th>Company</th>
+                                    <th>Match Score</th>
+                                    <th>Status</th>
+                                    <th>Applied Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in applied_list %}
+                                    <tr>
+                                        <td><strong>{{ app.job.title }}</strong></td>
+                                        <td>{{ app.job.company.profile.company_name|default:app.job.company.username }}</td>
+                                        <td>
+                                            <span class="badge {% if app.match_score >= 90 %}badge-success{% elif app.match_score >= 70 %}badge-warning{% else %}badge-danger{% endif %}">
+                                                {{ app.match_score }}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="score-label-badge {% if app.status == 'Highly Recommended' %}success{% elif app.status == 'Shortlisted' %}warning{% else %}danger{% endif %}" style="padding: 2px 10px; font-size: 11px;">
+                                                {{ app.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ app.created_at|date:"M d, Y" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-folder-open empty-icon"></i>
+                        <h4>No Applications Sent</h4>
+                        <p>Upload a resume, browse job openings, and apply to track submissions here.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Resume Analysis History -->
+            <div class="history-card glass-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-history"></i> Resume Scan History</h3>
+                </div>
+                
+                {% if analyses %}
+                    <div class="table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Resume Name</th>
+                                    <th>Date Scanned</th>
+                                    <th>ATS Score</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in analyses %}
+                                    <tr>
+                                        <td>
+                                            <div class="file-cell">
+                                                <i class="fa-solid fa-file-pdf text-danger"></i>
+                                                <span class="filename-text" title="{{ item.filename }}">{{ item.filename }}</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ item.created_at|date:"M d, Y h:i A" }}</td>
+                                        <td>
+                                            <span class="badge {% if item.ats_score >= 75 %}badge-success{% elif item.ats_score >= 50 %}badge-warning{% else %}badge-danger{% endif %}">
+                                                {{ item.ats_score }}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="{% url 'analysis_detail' item.pk %}" class="btn-action btn-view" title="View Full Report">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
+                                                <form action="{% url 'delete_analysis' item.pk %}" method="POST" class="inline-form" onsubmit="return confirm('Are you sure? This will delete the scan report.');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn-action btn-delete" title="Delete Report">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-file-circle-exclamation empty-icon"></i>
+                        <h4>No Resumes Scanned</h4>
+                        <p>Upload a PDF resume above to run your first automated optimization scan.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: ATS Score Gauge, Skills Mapping, Skill Gap, Recommendations -->
+        <div class="dashboard-side-column">
+            <!-- Latest Scan Overview -->
+            {% if latest_analysis %}
+                <!-- ATS circular Gauge -->
+                <div class="score-card glass-panel text-center">
+                    <h3>Latest ATS Score</h3>
+                    <div class="radial-gauge-container">
+                        <svg viewBox="0 0 120 120" class="radial-gauge">
+                            <circle cx="60" cy="60" r="54" class="gauge-bg" />
+                            <circle cx="60" cy="60" r="54" class="gauge-fill {% if latest_analysis.ats_score >= 75 %}success{% elif latest_analysis.ats_score >= 50 %}warning{% else %}danger{% endif %}" 
+                                    style="stroke-dasharray: 339.292; stroke-dashoffset: calc(339.292 - (339.292 * {{ latest_analysis.ats_score }}) / 100);" />
+                        </svg>
+                        <div class="gauge-text">
+                            <span class="score-number">{{ latest_analysis.ats_score }}</span>
+                            <span class="score-pct">%</span>
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'analysis_detail' latest_analysis.pk %}" class="btn-secondary btn-block">
+                        <i class="fa-solid fa-circle-info"></i> View Full Scan report
+                    </a>
+                </div>
+
+                <!-- Detected Skills -->
+                <div class="skills-analysis-card glass-panel">
+                    <h3><i class="fa-solid fa-code text-primary"></i> Detected Skills</h3>
+                    <div class="skills-showcase mt-3">
+                        <div class="skills-flex" style="gap: 6px;">
+                            {% for skill in latest_analysis.skills_found %}
+                                <span class="skill-badge" style="padding: 4px 10px; font-size: 11px;">
+                                    {{ skill }}
+                                </span>
+                            {% empty %}
+                                <p class="text-muted">No technical skills detected.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skill Gaps -->
+                <div class="skills-analysis-card glass-panel">
+                    <h3><i class="fa-solid fa-triangle-exclamation text-warning"></i> Skill Gap Analysis</h3>
+                    <p class="text-muted">Skills requested by hiring companies that are missing from your resume:</p>
+                    <div class="skills-showcase mt-3">
+                        <div class="skills-flex" style="gap: 6px;">
+                            {% for skill in missing_skills %}
+                                <span class="badge badge-danger text-xs" style="padding: 6px 10px; border-radius: 6px; font-weight: 600;">
+                                    <i class="fa-solid fa-plus"></i> {{ skill }}
+                                </span>
+                            {% empty %}
+                                <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Zero skill gaps detected!</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Corporate Target Recommendations -->
+                <div class="career-card glass-panel">
+                    <h3><i class="fa-solid fa-building text-success"></i> Target Employers</h3>
+                    <p class="text-muted">Companies with jobs matching your skill profile:</p>
+                    <div class="companies-container mt-3">
+                        {% for company in recommended_companies %}
+                            <div class="company-tag">
+                                <i class="fa-solid fa-building text-primary"></i> {{ company }}
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No employers matched yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Resume Heuristic Suggestions -->
+                <div class="tips-card glass-panel">
+                    <h3><i class="fa-solid fa-lightbulb text-warning"></i> Optimization Suggestions</h3>
+                    <ul class="tips-list">
+                        {% for sug in latest_analysis.suggestions|slice:":3" %}
+                            <li>
+                                {% if sug.type == 'critical' %}
+                                    <i class="fa-solid fa-times-circle text-danger"></i>
+                                {% elif sug.type == 'warning' %}
+                                    <i class="fa-solid fa-exclamation-circle text-warning"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-info-circle text-info"></i>
+                                {% endif %}
+                                <span>{{ sug.message }}</span>
+                            </li>
+                        {% empty %}
+                            <li><i class="fa-solid fa-check-circle text-success"></i> Resume meets all scanning requirements!</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Performance Trend Chart -->
+            <div class="chart-card glass-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-chart-area"></i> Performance Trend</h3>
+                </div>
+                <div class="chart-container">
+                    {% if chart_scores %}
+                        <div id="svg-chart-wrapper" 
+                             data-dates="{{ chart_dates|safe }}" 
+                             data-scores="{{ chart_scores|safe }}">
+                            <svg id="trend-svg" viewBox="0 0 400 220" width="100%" height="100%">
+                                <!-- Rendered client-side in main.js -->
+                            </svg>
+                        </div>
+                    {% else %}
+                        <div class="empty-chart-state">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <p>Scanned scores timeline will display here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ chart_dates|json_script:"chart-dates-data" }}
+{{ chart_scores|json_script:"chart-scores-data" }}
+{% endblock %}

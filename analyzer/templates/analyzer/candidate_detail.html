@@ -1,0 +1,134 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Candidate Review: {{ student.username }} - ResuAI{% endblock %}
+
+{% block content %}
+<div class="report-wrapper">
+    <!-- Top Header -->
+    <div class="report-header glass-panel">
+        <div class="header-main">
+            <a href="{% url 'candidate_ranking' application.job.pk %}" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Leaderboard</a>
+            <h2 class="mt-2">Candidate Profile: {{ student.username }}</h2>
+            <p class="scanned-date"><i class="fa-regular fa-envelope"></i> Contact: {{ student.email }}</p>
+        </div>
+        
+        <div class="header-actions">
+            {% if analysis.resume_file %}
+                <a href="{{ analysis.resume_file.url }}" target="_blank" class="btn-primary">
+                    <i class="fa-solid fa-file-pdf"></i> Download PDF Resume
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Match Statistics -->
+    <div class="report-grid">
+        <!-- Left Column: Match Score Dial -->
+        <div class="report-left-column">
+            <!-- Score Card -->
+            <div class="score-card glass-panel text-center">
+                <h3>Job Match Score</h3>
+                <div class="radial-gauge-container">
+                    <svg viewBox="0 0 120 120" class="radial-gauge">
+                        <circle cx="60" cy="60" r="54" class="gauge-bg" />
+                        <circle cx="60" cy="60" r="54" class="gauge-fill {% if application.match_score >= 90 %}success{% elif application.match_score >= 70 %}warning{% else %}danger{% endif %}" 
+                                style="stroke-dasharray: 339.292; stroke-dashoffset: calc(339.292 - (339.292 * {{ application.match_score }}) / 100);" />
+                    </svg>
+                    <div class="gauge-text">
+                        <span class="score-number">{{ application.match_score }}</span>
+                        <span class="score-pct">%</span>
+                    </div>
+                </div>
+                
+                <div class="score-label-badge {% if application.match_score >= 90 %}success{% elif application.match_score >= 70 %}warning{% else %}danger{% endif %}">
+                    {{ application.status }}
+                </div>
+            </div>
+
+            <!-- Resume ATS Info -->
+            <div class="career-card glass-panel text-center">
+                <h3>Resume ATS Score</h3>
+                <div class=" radial-gauge-container" style="width: 100px; height: 100px; margin: 15px auto;">
+                    <svg viewBox="0 0 120 120" class="radial-gauge">
+                        <circle cx="60" cy="60" r="54" class="gauge-bg" />
+                        <circle cx="60" cy="60" r="54" class="gauge-fill {% if analysis.ats_score >= 75 %}success{% elif analysis.ats_score >= 50 %}warning{% else %}danger{% endif %}" 
+                                style="stroke-dasharray: 339.292; stroke-dashoffset: calc(339.292 - (339.292 * {{ analysis.ats_score }}) / 100);" />
+                    </svg>
+                    <div class="gauge-text">
+                        <span class="score-number" style="font-size: 28px;">{{ analysis.ats_score }}</span>
+                        <span class="score-pct" style="font-size: 12px;">%</span>
+                    </div>
+                </div>
+                <p class="text-muted">This indicates the overall layout quality and formatting structure of the candidate's resume.</p>
+            </div>
+        </div>
+
+        <!-- Right Column: Skills mapping and Raw text -->
+        <div class="report-right-column" style="display: flex; flex-direction: column; gap: 30px;">
+            <!-- Skills Comparison Checklist -->
+            <div class="skills-analysis-card glass-panel">
+                <h3><i class="fa-solid fa-code-compare text-success"></i> Job Requirements Comparison</h3>
+                <p class="text-muted">Breakdown of matching and missing skills for this candidate against your job specifications:</p>
+                
+                <div class="comparison-lists mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Matched Skills -->
+                    <div class="matched-box glass-panel" style="border-left: 4px solid var(--color-success); background: rgba(0, 230, 118, 0.01);">
+                        <h4 style="font-size: 14px; font-weight: 700; color: var(--color-success); margin-bottom: 12px;">
+                            <i class="fa-solid fa-circle-check"></i> Matched Skills ({{ matched_skills|length }})
+                        </h4>
+                        <div class="skills-flex" style="gap: 4px;">
+                            {% for skill in matched_skills %}
+                                <span class="badge badge-success" style="font-size: 11px;">{{ skill }}</span>
+                            {% empty %}
+                                <p class="text-muted" style="font-size: 12px;">No skills matched.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Missing Skills -->
+                    <div class="missing-box glass-panel" style="border-left: 4px solid var(--color-danger); background: rgba(255, 23, 68, 0.01);">
+                        <h4 style="font-size: 14px; font-weight: 700; color: var(--color-danger); margin-bottom: 12px;">
+                            <i class="fa-solid fa-circle-xmark"></i> Missing Skills ({{ missing_skills|length }})
+                        </h4>
+                        <div class="skills-flex" style="gap: 4px;">
+                            {% for skill in missing_skills %}
+                                <span class="badge badge-danger" style="font-size: 11px;">{{ skill }}</span>
+                            {% empty %}
+                                <span class="badge badge-success" style="font-size: 11px;"><i class="fa-solid fa-check"></i> Perfect match!</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Detected Skills -->
+            <div class="skills-analysis-card glass-panel">
+                <h3><i class="fa-solid fa-laptop-code text-primary"></i> All Detected Skills</h3>
+                <p class="text-muted">Total list of tech skills extracted from the candidate's resume scan:</p>
+                <div class="skills-showcase mt-3">
+                    <div class="skills-flex" style="gap: 6px;">
+                        {% for skill in analysis.skills_found %}
+                            <span class="skill-badge">
+                                {{ skill }}
+                            </span>
+                        {% empty %}
+                            <p class="text-muted">No skills detected.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Text Console -->
+    <div class="parsed-text-card glass-panel mt-4">
+        <button class="accordion-trigger" id="text-accordion-trigger">
+            <span><i class="fa-solid fa-terminal"></i> View Parsed Resume Text</span>
+            <i class="fa-solid fa-chevron-down accordion-arrow" id="accordion-arrow"></i>
+        </button>
+        <div class="accordion-content hidden" id="text-accordion-content">
+            <pre class="raw-text-console"><code>{{ analysis.extracted_text }}</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

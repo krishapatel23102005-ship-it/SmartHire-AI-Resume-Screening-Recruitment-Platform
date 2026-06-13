@@ -1,0 +1,48 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Sign Up - ResuAI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card glass-panel">
+        <div class="auth-header">
+            {% if role == 'company' %}
+                <h2><i class="fa-solid fa-briefcase text-primary"></i> Recruiter Registration</h2>
+                <p>Register a corporate profile to post job openings and review matching candidates.</p>
+            {% else %}
+                <h2><i class="fa-solid fa-user-graduate text-success"></i> Candidate Registration</h2>
+                <p>Create a candidate profile to scan your PDF resume and apply directly to matching jobs.</p>
+            {% endif %}
+        </div>
+        
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-help-text">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-primary btn-block">
+                <i class="fa-solid fa-user-plus"></i> Complete Sign Up
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            {% if role == 'company' %}
+                <p>Looking for jobs? <a href="{% url 'student_register' %}" class="auth-link">Sign up as Candidate</a></p>
+            {% else %}
+                <p>Hiring for a company? <a href="{% url 'company_register' %}" class="auth-link">Sign up as Recruiter</a></p>
+            {% endif %}
+            <p class="mt-2">Already have an account? <a href="{% url 'login' %}" class="auth-link">Log In</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
